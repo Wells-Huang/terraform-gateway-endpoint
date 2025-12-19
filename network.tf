@@ -48,6 +48,7 @@ resource "aws_vpc_endpoint" "s3" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # 1. 維持原需求：允許存取我們自己的 Secure Bucket
       {
         Sid       = "AllowAccessToSpecificBucketOnly"
         Effect    = "Allow"
@@ -56,6 +57,29 @@ resource "aws_vpc_endpoint" "s3" {
         Resource  = [
           aws_s3_bucket.secure_bucket.arn,
           "${aws_s3_bucket.secure_bucket.arn}/*"
+        ]
+      },
+      # 2. 新增：允許 SSM Agent 存取該區域的 AWS 官方 SSM Bucket
+      # 這是讓 EC2 在 Private Subnet 能正常運作的必要條件
+      {
+        Sid       = "AllowAccessToAWSSSMBuckets"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = [
+          "arn:aws:s3:::amazon-ssm-ap-northeast-1/*",
+          "arn:aws:s3:::amazon-ssm-packages-ap-northeast-1/*"
+        ]
+      },
+      # 3. (選用) 如果是 Amazon Linux 2，通常也需要存取 Yum Repository
+      {
+        Sid       = "AllowAccessToAmazonLinuxRepo"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = [
+          "arn:aws:s3:::amazonlinux.ap-northeast-1.amazonaws.com/*",
+          "arn:aws:s3:::amazonlinux-2-repos-ap-northeast-1/*"
         ]
       }
     ]
