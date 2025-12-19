@@ -16,7 +16,7 @@ Route Table 中設定了指向 VPC Gateway Endpoint的路由 (endpoint policy決
 結果：Access Denied (因為 Endpoint Policy 只允許存取特定 Bucket)。
 
 失敗案例 B (Bucket Policy)：從您的本機電腦 (非此 VPC) 嘗試存取該 Bucket。
-結果：Access Denied (因為 S3 Bucket Policy 拒絕了非來自 vpc-xxxxx 的請求)。
+結果：Access Denied (因為 S3 Bucket Policy 拒絕了非來自此VPC的請求)。
 
 
 **架構圖**
