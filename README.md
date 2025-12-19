@@ -7,16 +7,6 @@ Route Table 中設定了指向 VPC Gateway Endpoint的路由 (endpoint policy決
 
 **使用說明**
 1. 執行terraform init, terraform plan, terraform apply看執行結果
-2.
-成功條件：在 EC2 內執行 aws s3 ls s3://<your-bucket-name>。
-流量路徑：EC2 -> Route Table -> VPC Endpoint -> S3。
-結果：成功 (Allow)。
-
-失敗條件 A (Endpoint Policy)：在 EC2 內嘗試存取其他 Bucket (例如 aws s3 ls s3://some-public-bucket)。
-結果：Access Denied (因為 Endpoint Policy 只允許存取特定 Bucket)。
-
-失敗案例 B (Bucket Policy)：從您的本機電腦 (非此 VPC) 嘗試存取該 Bucket。
-結果：Access Denied (因為 S3 Bucket Policy 拒絕了非來自此VPC的請求)。
 
 **驗證步驟 (透過 AWS Console)**
 部署完成後，請按照以下步驟進行完整的邏輯驗證：
@@ -33,6 +23,7 @@ Route Table 中設定了指向 VPC Gateway Endpoint的路由 (endpoint policy決
 在終端機內輸入以下指令，將 Bucket 名稱存為變數（方便後續測試）：
 # 請將這裡替換成您 terraform output 顯示的 bucket 名稱
 export BUCKET_NAME="demo-secure-bucket-xxxxxxxxx" 
+
 第三步：執行測試情境
 測試 A：正向測試（應該成功）
 測試 VPC 內的 EC2 是否能存取指定的 Bucket。
