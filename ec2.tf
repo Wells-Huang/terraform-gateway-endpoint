@@ -33,7 +33,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 
 # --- Security Group ---
 resource "aws_security_group" "ec2_sg" {
-  name        = "demo-ec2-sg"
+  name        = "${var.project_name}-ec2-sg"
   description = "Allow outbound traffic to S3"
   vpc_id      = aws_vpc.main.id
 
@@ -46,7 +46,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   tags = {
-    Name = "demo-ec2-sg"
+    Name = "${var.project_name}-ec2-sg"
   }
 }
 
@@ -68,6 +68,6 @@ resource "aws_instance" "app_server" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
-    Name = "demo-app-server"
+    Name = "${var.project_name}-app-server"
   }
 }

@@ -5,7 +5,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "demo-vpc-tokyo"
+    Name = "${var.project_name}-vpc"
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_subnet" "private_subnet" {
   availability_zone = "ap-northeast-1a"
 
   tags = {
-    Name = "demo-subnet-ec2"
+    Name = "${var.project_name}-subnet-ec2"
   }
 }
 
@@ -25,7 +25,7 @@ resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "demo-private-rt"
+    Name = "${var.project_name}-private-rt"
   }
 }
 
@@ -86,6 +86,6 @@ resource "aws_vpc_endpoint" "s3" {
   })
 
   tags = {
-    Name = "demo-s3-gateway-endpoint"
+    Name = "${var.project_name}-s3-gateway-endpoint"
   }
 }
