@@ -58,13 +58,54 @@ graph TD
 | `environment` | "dev" | 環境名稱 (e.g. dev, prod) |
 | `region` | "ap-northeast-1" | AWS 部署區域 |
 
-## 專案結構 (Project Structure)
-- `provider.tf`: AWS Provider 與 Terraform 版本設定。
-- `variables.tf`: 定義專案的可變參數。
-- `network.tf`: 定義 VPC, Subnet, Route Table 以及關鍵的 S3 Gateway Endpoint。
-- `ec2.tf`: 定義 EC2 Instance, Security Group 以及 IAM Role (包含 SSM 權限)。
-- `S3.tf`: 定義私有的 S3 Bucket。
-- `verify.tf`: (選用) 用於本地驗證或輔助資源。
+## 檔案功能說明 (File Descriptions)
+
+### 1. `provider.tf` (提供者設定)
+- **功能**：設定 Terraform 的 AWS 提供者 (Provider)。
+- **內容**：
+    - 指定 AWS Provider 的版本 (限制在 version 5.0 以上)。
+    - 設定部署的 AWS Region (區域)，引用了 `var.region` 變數。
+
+### 2. `variables.tf` (變數定義)
+- **功能**：定義專案中使用的輸入變數，讓程式碼更具彈性與重用性。
+- **內容**：
+    - `project_name`：專案名稱 (預設為 "demo")，用於資源命名。
+    - `environment`：環境名稱 (如 dev, prod)。
+    - `region`：AWS 區域 (預設 "ap-northeast-1")。
+
+### 3. `network.tf` (網路基礎建設)
+- **功能**：建立核心網路架構以及與 S3 的連接通道。
+- **主要資源**：
+    - **VPC** (`aws_vpc`)：建立虛擬私有網路。
+    - **Subnet** (`aws_subnet`)：建立一個私有子網 (Private Subnet)。
+    - **Route Table**：設定路由表，將子網流量導向正確位置。
+    - **VPC Gateway Endpoint (S3)** (`aws_vpc_endpoint.s3`)：這是一個關鍵資源。它允許位於私有子網的 EC2 能夠透過 AWS 內部網路直接存取 S3，而不需要經過網際網路 (Internet Gateway)。此外，它還包含了一個 Policy，限制只能存取特定的 Bucket 以及 AWS 必要的 Yum/SSM 套件庫。
+
+### 4. `ec2.tf` (運算資源與權限)
+- **功能**：部署應用程式伺服器 (EC2) 並設定相關的安全與權限。
+- **主要資源**：
+    - **IAM Role & Profile**：建立 EC2 使用的角色，並賦予權限。授予了 S3 存取權 (`AmazonS3FullAccess`) 和 SSM 管理權限 (`AmazonSSMManagedInstanceCore`)。
+    - **Security Group (`ec2-sg`)**：設定 EC2 的防火牆規則，只允許對外的 HTTPS (443) 流量 (給 S3 Endpoint 使用)。
+    - **EC2 Instance**：實際的虛擬機，使用 Amazon Linux 2 AMI，部署在私有子網中。
+
+### 5. `S3.tf` (儲存資源)
+- **功能**：建立物件儲存服務。
+- **內容**：
+    - 建立一個 **AWS S3 Bucket** (`secure_bucket`)，這是用來測試 Private 存取的目標 Bucket。
+
+### 6. `verify.tf` (驗證與管理通道 - SSM)
+- **功能**：建立讓使用者可以「驗證」與「管理」私有主機的基礎建設。
+- **原因**：因為 EC2 位於私有子網且沒有 Public IP，一般無法直接 SSH 連入。這個檔案建立的資源是為了讓使用者能使用 AWS Systems Manager (SSM) 的 Session Manager 功能連線進去。
+- **主要資源**：
+    - **VPC Interface Endpoints**：建立了三個必要的 Endpoint (`ssm`, `ec2messages`, `ssmmessages`)，讓 SSM Agent 能透過私有網路與 AWS SSM 服務溝通。
+    - **Security Group (`ssm_sg`)**：允許 VPC 內部流量透過 HTTPS 連線到這些 Endpoint。
+
+### 7. `output.tf` (輸出資訊)
+- **功能**：佈署完成後，輸出重要的資源資訊供使用者查看。
+- **內容**：
+    - S3 Bucket 名稱。
+    - EC2 Instance ID。
+    - S3 Endpoint ID。
 
 ## 使用說明 (Usage)
 
